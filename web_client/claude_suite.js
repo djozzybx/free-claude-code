@@ -154,7 +154,7 @@
 window.ClaudeSuite = (function () {
 
   window.openCodeSession = function(sessionId) {
-    const path = sessionId ? `/admin/code/${sessionId}` : "/admin/code";
+    const path = sessionId ? `/#code/${sessionId}` : "/#code";
     window.history.pushState({}, "", path);
     if (typeof setActiveView === "function") {
       setActiveView("code");
@@ -282,11 +282,19 @@ window.ClaudeSuite = (function () {
 
       renderUserProfileCard();
 
-    // Initial Route Detection
-    const path = window.location.pathname.replace(/^\//, '') || 'new';
+    // Initial Route Detection (supports both clean path /code and hash /#code / #code)
     const validViews = ['new', 'projects', 'artifacts', 'customize', 'code', 'settings'];
-    const initialView = validViews.includes(path) ? path : 'new';
+    const rawHash = (window.location.hash || '').replace(/^#\/?/, '').split('/')[0];
+    const rawPath = (window.location.pathname || '').replace(/^\//, '').split('/')[0];
+    const initialView = validViews.includes(rawHash) ? rawHash : (validViews.includes(rawPath) ? rawPath : 'new');
     if (window.navigateToView) window.navigateToView(initialView);
+
+    window.addEventListener("hashchange", () => {
+      const currentHash = (window.location.hash || '').replace(/^#\/?/, '').split('/')[0];
+      if (currentHash && validViews.includes(currentHash)) {
+        if (window.navigateToView) window.navigateToView(currentHash);
+      }
+    });
 
       window.initCaribTheme();
       applyRolePermissions();

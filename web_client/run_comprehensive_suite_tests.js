@@ -117,6 +117,7 @@ async function runTests() {
     { name: 'view_projects', url: `${BASE_URL}/#projects` },
     { name: 'view_artifacts', url: `${BASE_URL}/#artifacts` },
     { name: 'view_customize', url: `${BASE_URL}/#customize` },
+    { name: 'view_code_session', url: `${BASE_URL}/#code` },
     { name: 'view_admin_isolated', url: `${BASE_URL}/admin/` }
   ];
 
