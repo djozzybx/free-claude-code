@@ -356,12 +356,26 @@
             <div class="cc-prompt-controls-row">
               <div class="cc-prompt-controls-left">
                 <select class="cc-select-control" id="ccModelSelect">
-                  <option value="claude-3-7-sonnet" ${activeModel === 'claude-3-7-sonnet' ? 'selected' : ''}>Claude 3.7 Sonnet</option>
-                  <option value="claude-3-5-sonnet" ${activeModel === 'claude-3-5-sonnet' ? 'selected' : ''}>Claude 3.5 Sonnet</option>
-                  <option value="claude-3-5-haiku" ${activeModel === 'claude-3-5-haiku' ? 'selected' : ''}>Claude 3.5 Haiku</option>
-                  <option value="qwen-2.5-coder-32b" ${activeModel === 'qwen-2.5-coder-32b' ? 'selected' : ''}>Qwen 2.5 Coder 32B (Sovereign)</option>
-                  <option value="deepseek-coder-v2" ${activeModel === 'deepseek-coder-v2' ? 'selected' : ''}>DeepSeek Coder V2 (Sovereign)</option>
-                  <option value="ollama-local" ${activeModel === 'ollama-local' ? 'selected' : ''}>Local Ollama</option>
+                  <optgroup label="Anthropic Frontier Engines">
+                    <option value="claude-3-7-sonnet" ${activeModel === 'claude-3-7-sonnet' ? 'selected' : ''}>Claude 3.7 Sonnet</option>
+                    <option value="claude-3-5-sonnet" ${activeModel === 'claude-3-5-sonnet' ? 'selected' : ''}>Claude 3.5 Sonnet</option>
+                    <option value="claude-3-5-haiku" ${activeModel === 'claude-3-5-haiku' ? 'selected' : ''}>Claude 3.5 Haiku</option>
+                  </optgroup>
+                  <optgroup label="Sovereign Open-Weight Coding Models">
+                    <option value="open_weight/deepseek-ai/deepseek-v4-pro" ${activeModel === 'open_weight/deepseek-ai/deepseek-v4-pro' ? 'selected' : ''}>DeepSeek V4 Pro 1.6T (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4.1-flash" ${activeModel === 'open_weight/deepseek-ai/deepseek-v4.1-flash' ? 'selected' : ''}>DeepSeek V4.1 Flash (Free)</option>
+                    <option value="open_weight/alibaba/qwen-2.5-coder-32b" ${activeModel === 'open_weight/alibaba/qwen-2.5-coder-32b' ? 'selected' : ''}>Qwen 2.5 Coder 32B (Free)</option>
+                    <option value="open_weight/alibaba/qwen-3-coder-next" ${activeModel === 'open_weight/alibaba/qwen-3-coder-next' ? 'selected' : ''}>Qwen 3 Coder Next (Free)</option>
+                    <option value="open_weight/moonshotai/kimi-k2.7-code" ${activeModel === 'open_weight/moonshotai/kimi-k2.7-code' ? 'selected' : ''}>Kimi K2.7 Code 1T MoE (Free)</option>
+                    <option value="code/microsoft/mai-code-1-flash" ${activeModel === 'code/microsoft/mai-code-1-flash' ? 'selected' : ''}>MAI-Code-1-Flash (Free)</option>
+                    <option value="open_weight/zhipu-ai/glm-5.2" ${activeModel === 'open_weight/zhipu-ai/glm-5.2' ? 'selected' : ''}>GLM-5.2 Engineering (Free)</option>
+                    <option value="deepseek-coder-v2" ${activeModel === 'deepseek-coder-v2' ? 'selected' : ''}>DeepSeek Coder V2 (Free)</option>
+                  </optgroup>
+                  <optgroup label="Free Routers &amp; Local Runtimes">
+                    <option value="router/opencode/zen-free" ${activeModel === 'router/opencode/zen-free' ? 'selected' : ''}>OpenCode Zen Free Gateway</option>
+                    <option value="router/orcarouter/free" ${activeModel === 'router/orcarouter/free' ? 'selected' : ''}>OrcaRouter Auto-Free</option>
+                    <option value="ollama-local" ${activeModel === 'ollama-local' ? 'selected' : ''}>Local Ollama</option>
+                  </optgroup>
                 </select>
 
                 <select class="cc-select-control" id="ccEffortSelect">

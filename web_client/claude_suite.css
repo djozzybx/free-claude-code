@@ -703,6 +703,24 @@
   border-color: var(--claude-coral);
 }
 
+.claude-model-pill optgroup,
+.cc-select-control optgroup {
+  background: var(--claude-surface-2, #262624);
+  color: var(--claude-text-secondary, #9c9a94);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 6px 4px;
+}
+
+.claude-model-pill option,
+.cc-select-control option {
+  background: var(--claude-surface-1, #1e1e1c);
+  color: var(--claude-text-primary, #f5f4ef);
+  font-weight: 400;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
 .btn-prompt-icon {
   background: transparent;
   border: none;

@@ -695,15 +695,45 @@ window.ClaudeSuite = (function () {
 
                 <!-- Model Selector Pill (Photo 5: Sonnet 3.5 Medium) -->
                 <select id="claudeModelSelect" class="claude-model-pill" title="Choose Free Sovereign Model">
-                  <option value="open_weight/meta/muse-glimmer-30b">Muse Glimmer 30B (Free)</option>
-                  <option value="open_weight/meta-llama/llama-4-scout">Llama 4 Scout (Free)</option>
-                  <option value="open_weight/deepseek-ai/deepseek-v4-pro">DeepSeek V4 Pro (Free)</option>
-                  <option value="open_weight/deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash (Free)</option>
-                  <option value="open_weight/alibaba/qwen-2.5-coder-32b">Qwen 2.5 Coder 32B (Free)</option>
-                  <option value="open_weight/google/gemma-4-31b-it">Gemma 4 31B (Free)</option>
-                  <option value="open_weight/zhipu-ai/glm-5.2">GLM-5.2 (Free)</option>
-                  <option value="openrouter/free" selected>Sonnet 3.5 Medium (Free)</option>
-                  <option value="anthropic/claude-3.7-sonnet:free">Sonnet 3.7 Thinking (Free)</option>
+                  <optgroup label="🌟 Frontier &amp; Sovereign Free Models">
+                    <option value="openrouter/free" selected>Sonnet 3.5 Medium (Free)</option>
+                    <option value="anthropic/claude-3.7-sonnet:free">Sonnet 3.7 Thinking (Free)</option>
+                    <option value="open_weight/meta/muse-glimmer-30b">Muse Glimmer 30B (Free)</option>
+                    <option value="open_weight/meta-llama/llama-4-scout">Llama 4 Scout (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4-pro">DeepSeek V4 Pro (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4.1-flash">DeepSeek V4.1 Flash (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash (Free)</option>
+                    <option value="open_weight/google/gemma-4-31b-it">Gemma 4 31B (Free)</option>
+                    <option value="open_weight/google/gemma-4-12b-it">Gemma 4 12B Laptop (Free)</option>
+                    <option value="open_weight/moonshotai/kimi-k3">Kimi K3 2.8T MoE (Free)</option>
+                    <option value="open_weight/stepfun-ai/step-3.7-flash">Step 3.7 Flash (Free)</option>
+                    <option value="open_weight/zhipu-ai/glm-5.2">GLM-5.2 (Free)</option>
+                    <option value="open_weight/zhipu-ai/glm-5.3-flashx">GLM-5.3 FlashX (Free)</option>
+                    <option value="open_weight/alibaba/qwen-2.5-coder-32b">Qwen 2.5 Coder 32B (Free)</option>
+                    <option value="open_weight/alibaba/qwen-3-coder-next">Qwen 3 Coder Next (Free)</option>
+                    <option value="open_weight/thinkingmachines/inkling">Inkling 975B MoE (Free)</option>
+                    <option value="open_weight/mistralai/mistral-large-3">Mistral Large 3 (Free)</option>
+                    <option value="open_weight/nvidia/nemotron-3-super">Nemotron 3 Super (Free)</option>
+                    <option value="open_weight/prism-ml/ternary-bonsai-2-27b">Ternary Bonsai 2 27B (Free)</option>
+                  </optgroup>
+                  <optgroup label="🔀 Free API Routers &amp; Gateways">
+                    <option value="router/orcarouter/free">OrcaRouter Auto-Free ($0.00)</option>
+                    <option value="router/opencode/zen-free">OpenCode Zen Free Gateway</option>
+                    <option value="router/llm7/free">LLM7.io High-Speed 30 RPM (Free)</option>
+                    <option value="router/bazaarlink/auto-free">BazaarLink Auto:Free (Free)</option>
+                    <option value="router/freeaiapikey/gateway">FreeAIapikey 100K Daily (Free)</option>
+                  </optgroup>
+                  <optgroup label="🖼️ Free Image &amp; Media Gen">
+                    <option value="image/pollinations/flux">Pollinations.ai FLUX (Free)</option>
+                    <option value="image/kavel/free">Kavel Instant Image (Free)</option>
+                    <option value="image/bfl/flux2-dev">FLUX.2-dev (Free)</option>
+                    <option value="image/baidu/ernie-image-turbo">ERNIE-Image Turbo (Free)</option>
+                  </optgroup>
+                  <optgroup label="🎵 Audio &amp; Voice Processing">
+                    <option value="audio/alibaba/qwen3-tts">Qwen3-TTS Voice Clone (Free)</option>
+                    <option value="audio/resemble-ai/chatterbox-turbo">Chatterbox Turbo (Free)</option>
+                    <option value="audio/systran/faster-whisper">Faster-Whisper (Free)</option>
+                  </optgroup>
                 </select>
 
                 <!-- Effort Selector Pill (Photo 5: Manual) -->
@@ -831,15 +861,45 @@ window.ClaudeSuite = (function () {
 
               <div class="claude-prompt-right" style="display:flex;align-items:center;gap:10px;">
                 <select id="claudeModelSelect" class="claude-model-pill" title="Choose Free Sovereign Model">
-                  <option value="open_weight/meta/muse-glimmer-30b">Muse Glimmer 30B (Free)</option>
-                  <option value="open_weight/meta-llama/llama-4-scout">Llama 4 Scout (Free)</option>
-                  <option value="open_weight/deepseek-ai/deepseek-v4-pro">DeepSeek V4 Pro (Free)</option>
-                  <option value="open_weight/deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash (Free)</option>
-                  <option value="open_weight/alibaba/qwen-2.5-coder-32b">Qwen 2.5 Coder 32B (Free)</option>
-                  <option value="open_weight/google/gemma-4-31b-it">Gemma 4 31B (Free)</option>
-                  <option value="open_weight/zhipu-ai/glm-5.2">GLM-5.2 (Free)</option>
-                  <option value="openrouter/free" selected>Sonnet 3.5 Medium (Free)</option>
-                  <option value="anthropic/claude-3.7-sonnet:free">Sonnet 3.7 Thinking (Free)</option>
+                  <optgroup label="🌟 Frontier &amp; Sovereign Free Models">
+                    <option value="openrouter/free" selected>Sonnet 3.5 Medium (Free)</option>
+                    <option value="anthropic/claude-3.7-sonnet:free">Sonnet 3.7 Thinking (Free)</option>
+                    <option value="open_weight/meta/muse-glimmer-30b">Muse Glimmer 30B (Free)</option>
+                    <option value="open_weight/meta-llama/llama-4-scout">Llama 4 Scout (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4-pro">DeepSeek V4 Pro (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4.1-flash">DeepSeek V4.1 Flash (Free)</option>
+                    <option value="open_weight/deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash (Free)</option>
+                    <option value="open_weight/google/gemma-4-31b-it">Gemma 4 31B (Free)</option>
+                    <option value="open_weight/google/gemma-4-12b-it">Gemma 4 12B Laptop (Free)</option>
+                    <option value="open_weight/moonshotai/kimi-k3">Kimi K3 2.8T MoE (Free)</option>
+                    <option value="open_weight/stepfun-ai/step-3.7-flash">Step 3.7 Flash (Free)</option>
+                    <option value="open_weight/zhipu-ai/glm-5.2">GLM-5.2 (Free)</option>
+                    <option value="open_weight/zhipu-ai/glm-5.3-flashx">GLM-5.3 FlashX (Free)</option>
+                    <option value="open_weight/alibaba/qwen-2.5-coder-32b">Qwen 2.5 Coder 32B (Free)</option>
+                    <option value="open_weight/alibaba/qwen-3-coder-next">Qwen 3 Coder Next (Free)</option>
+                    <option value="open_weight/thinkingmachines/inkling">Inkling 975B MoE (Free)</option>
+                    <option value="open_weight/mistralai/mistral-large-3">Mistral Large 3 (Free)</option>
+                    <option value="open_weight/nvidia/nemotron-3-super">Nemotron 3 Super (Free)</option>
+                    <option value="open_weight/prism-ml/ternary-bonsai-2-27b">Ternary Bonsai 2 27B (Free)</option>
+                  </optgroup>
+                  <optgroup label="🔀 Free API Routers &amp; Gateways">
+                    <option value="router/orcarouter/free">OrcaRouter Auto-Free ($0.00)</option>
+                    <option value="router/opencode/zen-free">OpenCode Zen Free Gateway</option>
+                    <option value="router/llm7/free">LLM7.io High-Speed 30 RPM (Free)</option>
+                    <option value="router/bazaarlink/auto-free">BazaarLink Auto:Free (Free)</option>
+                    <option value="router/freeaiapikey/gateway">FreeAIapikey 100K Daily (Free)</option>
+                  </optgroup>
+                  <optgroup label="🖼️ Free Image &amp; Media Gen">
+                    <option value="image/pollinations/flux">Pollinations.ai FLUX (Free)</option>
+                    <option value="image/kavel/free">Kavel Instant Image (Free)</option>
+                    <option value="image/bfl/flux2-dev">FLUX.2-dev (Free)</option>
+                    <option value="image/baidu/ernie-image-turbo">ERNIE-Image Turbo (Free)</option>
+                  </optgroup>
+                  <optgroup label="🎵 Audio &amp; Voice Processing">
+                    <option value="audio/alibaba/qwen3-tts">Qwen3-TTS Voice Clone (Free)</option>
+                    <option value="audio/resemble-ai/chatterbox-turbo">Chatterbox Turbo (Free)</option>
+                    <option value="audio/systran/faster-whisper">Faster-Whisper (Free)</option>
+                  </optgroup>
                 </select>
 
                 <button type="button" id="btnVoiceInput" class="btn-prompt-icon ${isVoiceRecording ? 'recording' : ''}" title="Voice dictation (speech-to-text)">

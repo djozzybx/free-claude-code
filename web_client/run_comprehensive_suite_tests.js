@@ -93,14 +93,71 @@ async function runTests() {
   assert('Assistant reply contains audience demographic age brackets', assistantReply && (assistantReply.content.includes('18') && (assistantReply.content.includes('18–24') || assistantReply.content.includes('18-24'))));
   assert('Assistant reply contains compliance (COPPA / GDPR / Age Verification)', assistantReply && (assistantReply.content.includes('COPPA') || assistantReply.content.includes('GDPR')));
 
-  // TEST 5: Awesome Free Models Catalog in Selectors
+  // TEST 5: Awesome Free Models Catalog in Selectors & API Endpoints
   console.log('\n--- TEST GROUP 5: AWESOME FREE MODELS CATALOG ---');
   const jsContent = fs.readFileSync(path.join(__dirname, 'claude_suite.js'), 'utf8');
   assert('Model selector includes Muse Glimmer 30B', jsContent.includes('muse-glimmer-30b'));
   assert('Model selector includes Llama 4 Scout', jsContent.includes('llama-4-scout'));
   assert('Model selector includes DeepSeek V4 Flash', jsContent.includes('deepseek-v4-flash'));
+  assert('Model selector includes DeepSeek V4.1 Flash', jsContent.includes('deepseek-v4.1-flash'));
   assert('Model selector includes Qwen 2.5 Coder 32B', jsContent.includes('qwen-2.5-coder-32b'));
+  assert('Model selector includes Qwen 3 Coder Next', jsContent.includes('qwen-3-coder-next'));
   assert('Model selector includes Gemma 4 31B', jsContent.includes('gemma-4-31b'));
+  assert('Model selector includes Kimi K3 2.8T MoE', jsContent.includes('kimi-k3'));
+  assert('Model selector includes Step 3.7 Flash', jsContent.includes('step-3.7-flash'));
+  assert('Model selector includes GLM-5.3 FlashX', jsContent.includes('glm-5.3-flashx'));
+  assert('Model selector includes OrcaRouter Free', jsContent.includes('router/orcarouter/free'));
+  assert('Model selector includes OpenCode Zen Free', jsContent.includes('router/opencode/zen-free'));
+  assert('Model selector includes Pollinations FLUX Image Gen', jsContent.includes('image/pollinations/flux'));
+  assert('Model selector includes Qwen3-TTS Voice Clone', jsContent.includes('audio/alibaba/qwen3-tts'));
+
+  // Test Code Sessions Model Selector
+  const codeJsContent = fs.readFileSync(path.join(__dirname, 'code_sessions.js'), 'utf8');
+  assert('Code sessions selector includes Qwen 3 Coder Next', codeJsContent.includes('qwen-3-coder-next'));
+  assert('Code sessions selector includes Kimi K2.7 Code', codeJsContent.includes('kimi-k2.7-code'));
+  assert('Code sessions selector includes MAI-Code-1-Flash', codeJsContent.includes('mai-code-1-flash'));
+
+  // Test Admin API Models Registry
+  const adminModelsRes = await fetchUrl('/admin/api/models');
+  assert('Admin API models returns HTTP 200 OK', adminModelsRes.status === 200);
+  const adminModelsData = JSON.parse(adminModelsRes.body);
+  assert('Admin models registry contains >= 600 verified free models', adminModelsData.models && adminModelsData.models.length >= 600);
+  assert('Admin models registry includes Kimi K3', adminModelsData.models && adminModelsData.models.some(m => m.includes('kimi-k3')));
+  assert('Admin models registry includes OrcaRouter', adminModelsData.models && adminModelsData.models.some(m => m.includes('orcarouter')));
+  assert('Admin models registry includes Pollinations', adminModelsData.models && adminModelsData.models.some(m => m.includes('pollinations')));
+
+  // Test Live Chat API with Awesome Free Models
+  function postChatReq(model, message) {
+    return new Promise((resolve, reject) => {
+      const payload = JSON.stringify({ model, message, stream: false });
+      const req = http.request({
+        hostname: '127.0.0.1',
+        port: PORT,
+        path: '/api/chat',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {
+        let d = '';
+        res.on('data', chunk => d += chunk);
+        res.on('end', () => resolve(JSON.parse(d)));
+      });
+      req.on('error', reject);
+      req.write(payload);
+      req.end();
+    });
+  }
+
+  const kimiChat = await postChatReq('open_weight/moonshotai/kimi-k3', 'What is sovereign intelligence?');
+  assert('Kimi K3 returns status ok', kimiChat.status === 'ok');
+  assert('Kimi K3 response cost is $0.00', kimiChat.cost === 0);
+  assert('Kimi K3 returns valid SWD receipt', !!kimiChat.swd_receipt && kimiChat.swd_receipt.startsWith('swd_rcpt_'));
+
+  const imgChat = await postChatReq('image/pollinations/flux', 'draw a cybernetic tiger');
+  assert('Pollinations FLUX image generation returns markdown image link', imgChat.reply && imgChat.reply.includes('image.pollinations.ai/prompt/'));
+  assert('Pollinations FLUX token cost is $0.00', imgChat.cost === 0);
 
   // TEST 6: Zero Mention Rule Validation (No forbidden tags)
   console.log('\n--- TEST GROUP 6: GOVERNANCE & ZERO MENTION RULE ---');
