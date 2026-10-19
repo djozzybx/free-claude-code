@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Claude</title>
+    <meta name="theme-color" content="#1b1a19" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Claude" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/carib-cold-logo.svg" />
+    <link rel="stylesheet" href="/admin/assets/__FCC_VERSION__/session_layout.css" />
+    <link rel="stylesheet" href="/admin/assets/__FCC_VERSION__/code_sessions.css" />
+    <link rel="stylesheet" href="/admin/assets/__FCC_VERSION__/claude_suite.css" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+      }
+      if (window.location.username || window.location.password) {
+        try {
+          const cleanUrl = window.location.origin + window.location.pathname + window.location.search + window.location.hash;
+          window.history.replaceState({}, document.title, cleanUrl);
+        } catch (_) {}
+      }
+    </script>
+  </head>
+  <body class="light-mode">
+    <div class="app-shell">
+      <!-- Authentic Claude Desktop Sidebar -->
+      <aside class="sidebar" id="appSidebar">
+        <!-- Claude Header Brand with Sidebar Toggle (matching real Claude Desktop) -->
+        <div class="sidebar-brand-row">
+          <button id="btnSidebarCollapse" class="sidebar-toggle-icon-btn" onclick="window.toggleSidebarCollapse()" title="Toggle Sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+          </button>
+          <span class="sidebar-brand-title">Claude</span>
+        </div>
+
+        <!-- Sidebar Search Input (matching real Claude Desktop) -->
+        <div class="sidebar-search-container">
+          <div class="sidebar-search-field">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="sidebarSearchInput" placeholder="Search" oninput="window.filterRecents(this.value)" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+
+        <div class="sidebar-top-section">
+          <button class="sidebar-new-btn" id="btnSidebarNew" onclick="window.navigateToView('new')" title="Start New Chat (⌘N)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>New</span>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav-list" aria-label="Main Navigation">
+          <button class="sidebar-nav-item" data-view="projects" onclick="window.navigateToView('projects')" title="Projects & Workspaces">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Projects</span>
+          </button>
+
+          <button class="sidebar-nav-item" data-view="artifacts" onclick="window.navigateToView('artifacts')" title="Artifacts Studio">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            </svg>
+            <span>Artifacts</span>
+          </button>
+
+          <button class="sidebar-nav-item" data-view="customize" onclick="window.navigateToView('customize')" title="Customize: Skills, Connectors, Plugins">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+            <span>Customize</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-recents-section">
+          <div class="recents-section-header">
+            <span>Recents</span>
+            <div class="recents-header-icons">
+              <button class="recents-header-btn" title="Search chats" onclick="window.focusSearch()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+              <button class="recents-header-btn" title="Sort recents" onclick="window.sortRecents()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="4" y1="6" x2="20" y2="6"></line>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                  <line x1="10" y1="18" x2="14" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="chatHistoryList" class="chat-history-list">
+            <!-- Dynamically populated from /api/chat/conversations -->
+          </div>
+        </div>
+
+        <!-- User Profile Card: Tiktokgod · Free with Avatar T -->
+        <div id="userProfileCard" class="user-profile-card">
+          <div class="user-profile-info">
+            <div id="userAvatar" class="user-avatar-circle">T</div>
+            <div class="user-name-text">
+              <span id="userName">Tiktokgod · Free</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+          <div class="user-dock-icon" title="Workspace Dock">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </div>
+        </div>
+
+        <!-- User Menu Popover -->
+        <div id="userMenuPopover" class="user-menu-popover">
+          <div class="user-menu-header">
+            <div class="user-menu-title" style="font-size:13px;font-weight:500;color:var(--claude-text-primary,#ececec);">djozzyb@icloud.com</div>
+          </div>
+          <div class="user-menu-item" onclick="window.navigateToView('settings')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span style="flex:1;">Settings</span>
+            <kbd style="font-size:11px;opacity:0.5;font-family:sans-serif;">⌘,</kbd>
+          </div>
+          <div class="user-menu-item" onclick="alert('Language: English (US)')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>Language</span>
+          </div>
+          <div class="user-menu-item" onclick="window.open('https://support.claude.com', '_blank')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Get help</span>
+          </div>
+          <div class="user-menu-divider"></div>
+          <div class="user-menu-item" onclick="window.openPlansModal()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <span>Upgrade plan</span>
+          </div>
+          <div class="user-menu-item" onclick="window.openDownloadsModal()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Get apps and extensions</span>
+          </div>
+          <div class="user-menu-divider"></div>
+          <div class="user-menu-item" onclick="window.location.href='/logout?involuntary=1&returnTo=%2Flogin%3Ffrom%3Dlogout%26reauth%3D1%26returnTo%3D%252Fnew'" style="color:#ef4444;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Log out</span>
+          </div>
+        </div>
+      </aside>
+      <div id="mobileSidebarBackdrop" class="mobile-sidebar-backdrop" onclick="window.toggleMobileSidebar(event)"></div>
+
+      <!-- Main Application Surface -->
+      <main class="main">
+        <!-- Exact Claude Desktop Topbar matching real_claude_desktop.png -->
+        <header class="topbar">
+          <div class="claude-topbar-wrapper">
+            <button id="btnMobileSidebarToggle" class="sidebar-toggle-btn" aria-label="Toggle Navigation Sidebar" onclick="window.toggleMobileSidebar(event)" type="button" title="Toggle Sidebar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </button>
+
+            <!-- Back / Forward History Controls -->
+            <div class="nav-history-controls">
+              <button class="nav-history-btn" title="Back" onclick="window.history.back()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button class="nav-history-btn" title="Forward" onclick="window.history.forward()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+
+            <!-- Search Chats Pill (matching real_claude_desktop.png) -->
+            <div class="topbar-search-pill" onclick="window.focusSearch()" title="Search chats (⌘K)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+
+            <!-- Code Button </> (matching real_claude_desktop.png) -->
+            <button id="btnCodeToggle" class="topbar-code-btn" onclick="window.navigateToView('code')" title="Claude Code & Terminal (</>)">
+              <span>&lt;/&gt;</span>
+            </button>
+
+            <div style="flex:1;"></div>
+
+            <!-- Free plan · Upgrade pill (matching real_claude_desktop.png) -->
+            <div class="claude-top-pill" onclick="window.openPlansModal()" title="Sovereign Free Mode · $0.00 Cost">
+              <span>Free plan</span>
+              <span style="opacity:0.4;">·</span>
+              <a href="javascript:void(0)" onclick="window.openPlansModal(); event.stopPropagation();">Upgrade</a>
+            </div>
+
+            <!-- Top Right Document and Help Icons -->
+            <div class="topbar-right-icons">
+              <button class="btn-ghost-icon" title="View Active Artifact" onclick="window.navigateToView('artifacts')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </button>
+              <button class="btn-ghost-icon" title="Help & Feedback" onclick="window.open('https://support.claude.com', '_blank')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- User App Views (Strictly isolated from admin views) -->
+        <div id="userAppViews" class="user-app-views">
+          <section id="view-new" class="user-view active" data-view="new"></section>
+          <section id="view-projects" class="user-view" data-view="projects" hidden></section>
+          <section id="view-artifacts" class="user-view" data-view="artifacts" hidden></section>
+          <section id="view-customize" class="user-view" data-view="customize" hidden></section>
+          <section id="view-code" class="user-view" data-view="code" hidden>
+            <div id="codeRoot"></div>
+          </section>
+          <section id="view-settings" class="user-view" data-view="settings" hidden></section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <dialog id="downloadsDialog" class="claude-modal downloads-modal" aria-labelledby="downloadsDialogTitle">
+      <div class="claude-modal-card">
+        <div class="claude-modal-header">
+          <div>
+            <div class="claude-modal-badge">Anthropic Official & Sovereign Ecosystem</div>
+            <h3 id="downloadsDialogTitle" class="claude-modal-title">Claude across all your devices</h3>
+            <p class="claude-modal-subtitle">Experience seamless intelligence on desktop, terminal, and mobile—fully bridged to your Sovereign Free models.</p>
+          </div>
+          <button class="claude-modal-close" type="button" onclick="window.closeDownloadsModal()" aria-label="Close dialog">&#x2715;</button>
+        </div>
+        <div class="claude-modal-body">
+          <div class="downloads-grid">
+            <!-- Mac Card -->
+            <div class="download-card featured-download">
+              <div class="download-card-badge">Installed & Running on this MacBook</div>
+              <div class="download-card-header">
+                <div class="download-icon mac-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.84.94-2.91-1 .04-2.17.65-2.82 1.41-.57.66-.99 1.74-.86 2.78 1.12.09 2.11-.51 2.74-1.28z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="download-app-name">Claude for Mac</h4>
+                  <span class="download-app-meta">macOS 13+ · Universal (Apple Silicon & Intel)</span>
+                </div>
+              </div>
+              <p class="download-app-desc">Spotlight quick-launch (⌥ Space), floating Artifacts, local Cowork directory, and active Sovereign MCP bridge.</p>
+              <div class="download-status-pill">
+                <span class="pulse-dot"></span>
+                <span>Claude Desktop 2.42304.0 connected · MCP Bridge Active</span>
+              </div>
+              <div class="download-card-actions">
+                <a href="https://claude.ai/download/mac" target="_blank" class="download-btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Download .dmg</span>
+                </a>
+                <button class="download-btn-secondary" onclick="window.copyCliCommand('open -a Claude', this)">
+                  <span>Launch Local App</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Windows Card -->
+            <div class="download-card">
+              <div class="download-card-header">
+                <div class="download-icon win-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.951-1.801"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="download-app-name">Claude for Windows</h4>
+                  <span class="download-app-meta">Windows 10 & 11 · x64 & ARM64</span>
+                </div>
+              </div>
+              <p class="download-app-desc">Global hotkey (Alt Space), Windows tray presence, native notifications, and Windows Cowork file support.</p>
+              <div class="download-card-actions">
+                <a href="https://claude.ai/download/windows" target="_blank" class="download-btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Download .exe</span>
+                </a>
+              </div>
+            </div>
+
+            
+            <div class="download-card full-width-card">
+              <div class="download-card-header">
+                <div class="download-icon cli-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="download-app-name">Claude Code CLI (Terminal Development Suite)</h4>
+                  <span class="download-app-meta">macOS, Linux, Windows WSL · Agentic Autonomous Coding</span>
+                </div>
+              </div>
+              <p class="download-app-desc">Anthropic's terminal agent that understands your entire repository, writes code, fixes bugs, and runs tests. Connect it directly to your Carib Cold Sovereign Proxy to enjoy 100% free multi-model routing.</p>
+              
+              <div class="cli-command-group">
+                <div class="cli-step-label">1. Install Claude Code CLI:</div>
+                <div class="code-snippet-box">
+                  <code>npm install -g @anthropic-ai/claude-code</code>
+                  <button class="copy-snippet-btn" onclick="window.copyCliCommand('npm install -g @anthropic-ai/claude-code', this)">Copy</button>
+                </div>
+                
+                <div class="cli-step-label">2. Route to Carib Cold Free Sovereign Proxy:</div>
+                <div class="code-snippet-box">
+                  <code>export ANTHROPIC_BASE_URL="https://caribclaude.caribgroupofcompanies.ltd/api"</code>
+                  <button class="copy-snippet-btn" onclick="window.copyCliCommand('export ANTHROPIC_BASE_URL=&quot;https://caribclaude.caribgroupofcompanies.ltd/api&quot;', this)">Copy</button>
+                </div>
+
+                <div class="cli-step-label">3. Launch Claude Code in your terminal:</div>
+                <div class="code-snippet-box">
+                  <code>claude</code>
+                  <button class="copy-snippet-btn" onclick="window.copyCliCommand('claude', this)">Copy</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile Card (iOS & Android) -->
+            <div class="download-card full-width-card">
+              <div class="download-card-header">
+                <div class="download-icon mobile-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="download-app-name">Claude Mobile (iOS, iPadOS & Android)</h4>
+                  <span class="download-app-meta">iPhone, iPad & Android Smartphones / Tablets</span>
+                </div>
+              </div>
+              <p class="download-app-desc">Capture images, transcribe voice dictation in real time, analyze PDFs, and access all your chats seamlessly across devices.</p>
+              <div class="download-mobile-badges">
+                <a href="https://apps.apple.com/app/claude-by-anthropic/id6473753684" target="_blank" class="mobile-store-badge">
+                  <span>Download on Apple App Store</span>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.anthropic.claude" target="_blank" class="mobile-store-badge">
+                  <span>Get it on Google Play</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="plansDialog" class="claude-modal plans-modal" aria-labelledby="plansDialogTitle">
+      <div class="claude-modal-card">
+        <div class="claude-modal-header">
+          <div>
+            <div class="claude-modal-badge">Anthropic Commercial Plans & Sovereign Parity</div>
+            <h3 id="plansDialogTitle" class="claude-modal-title">Plans that grow with you</h3>
+            <p class="claude-modal-subtitle">Questions? Chat with our buying specialist. Compare official Anthropic seat-based commercial plans with your active Carib Cold Sovereign Free tier.</p>
+          </div>
+          <button class="claude-modal-close" type="button" onclick="window.closePlansModal()" aria-label="Close dialog">&#x2715;</button>
+        </div>
+
+        <div class="billing-switcher-container">
+          <div class="billing-switcher">
+            <button class="billing-toggle-btn active" id="btnBillingYearly" onclick="window.toggleBillingCycle('yearly')">
+              <span>Annual billing</span>
+              <span class="save-tag">Save up to 20%</span>
+            </button>
+            <button class="billing-toggle-btn" id="btnBillingMonthly" onclick="window.toggleBillingCycle('monthly')">Monthly billing</button>
+          </div>
+        </div>
+
+        <div class="claude-modal-body">
+          <div class="plans-grid">
+            <!-- Team Standard Seat -->
+            <div class="plan-card">
+              <span class="plan-user-badge">2–150 users</span>
+              <div class="plan-tier-name">Standard seat</div>
+              <div class="plan-price-block">
+                <span class="plan-price" id="standardPriceLabel">$20</span>
+                <span class="plan-period" id="standardPeriodLabel">/ seat / mo</span>
+              </div>
+              <span class="plan-sub-price" id="standardSubLabel">billed annually ($25/mo monthly)</span>
+              <p class="plan-desc">Predictable usage per seat. All Claude features, plus more usage than Pro*.</p>
+              <a href="https://claude.ai/pricing" target="_blank" class="plan-action-btn secondary">Retail Team Tier</a>
+              <ul class="plan-feature-list">
+                <li><span class="check-icon">✓</span> All Claude features, plus more usage than Pro*</li>
+                <li><span class="check-icon">✓</span> Central billing and administration</li>
+                <li><span class="check-icon">✓</span> Admin controls for remote and local connectors</li>
+                <li><span class="check-icon">✓</span> No model training on your content by default</li>
+                <li><span class="check-icon">✓</span> Mix and match seat types</li>
+                <li><span class="cross-icon">✕</span> Claude Code and Claude Cowork excluded</li>
+                <li><span class="cross-icon">✕</span> Claude Design & Claude Science excluded</li>
+              </ul>
+            </div>
+
+            <!-- Team Premium Seat -->
+            <div class="plan-card" style="border-color: rgba(217, 119, 87, 0.4);">
+              <span class="plan-user-badge" style="background: rgba(217, 119, 87, 0.15); color: var(--claude-coral);">2–150 users</span>
+              <div class="plan-tier-name" style="color: var(--claude-coral);">Premium seat</div>
+              <div class="plan-price-block">
+                <span class="plan-price plan-price-pro" id="premiumPriceLabel" style="color: var(--claude-coral);">$100</span>
+                <span class="plan-period" id="premiumPeriodLabel">/ seat / mo</span>
+              </div>
+              <span class="plan-sub-price" id="premiumSubLabel">billed annually ($125/mo monthly)</span>
+              <p class="plan-desc">5x more usage than standard seats* with full developer & science toolsets.</p>
+              <a href="https://claude.ai/pricing" target="_blank" class="plan-action-btn secondary" style="border-color: var(--claude-coral); color: var(--claude-coral);">Retail Premium Tier</a>
+              <ul class="plan-feature-list">
+                <li><span class="check-icon">✓</span> <strong>5x more usage</strong> than standard seats*</li>
+                <li><span class="check-icon">✓</span> <strong>Includes Claude Code and Claude Cowork</strong></li>
+                <li><span class="check-icon">✓</span> <strong>Includes Claude Design</strong></li>
+                <li><span class="check-icon">✓</span> <strong>Includes Claude Science</strong></li>
+                <li><span class="check-icon">✓</span> Connect Microsoft 365, @Claude, and more</li>
+                <li><span class="check-icon">✓</span> Enterprise search across your organization</li>
+                <li><span class="check-icon">✓</span> Single sign-on (SSO)</li>
+                <li><span class="check-icon">✓</span> Enterprise deployment for desktop app</li>
+                <li><span class="check-icon">✓</span> Mix and match seat types</li>
+              </ul>
+            </div>
+
+            <!-- Enterprise Tier -->
+            <div class="plan-card">
+              <span class="plan-user-badge">20+ users</span>
+              <div class="plan-tier-name">Enterprise</div>
+              <div class="plan-price-block">
+                <span class="plan-price plan-price-team" id="enterprisePriceLabel">$20</span>
+                <span class="plan-period" id="enterprisePeriodLabel">/ seat / mo</span>
+              </div>
+              <span class="plan-sub-price">+ tax, billed annually + API usage rates</span>
+              <p class="plan-desc">Flexible pooled usage. Seat price + usage at API rates. Cost scales with model and task.</p>
+              <a href="https://www.claude.com/pricing#api" target="_blank" class="plan-action-btn secondary">Contact Sales</a>
+              <ul class="plan-feature-list">
+                <li><span class="check-icon">✓</span> Everything in Team included</li>
+                <li><span class="check-icon">✓</span> Admins set user and org spend limits</li>
+                <li><span class="check-icon">✓</span> Role-based access with fine-grained permissioning</li>
+                <li><span class="check-icon">✓</span> System for Cross-domain Identity Management (SCIM)</li>
+                <li><span class="check-icon">✓</span> Audit logs & Compliance API for observability</li>
+                <li><span class="check-icon">✓</span> Custom data retention controls</li>
+                <li><span class="check-icon">✓</span> Network-level access control & IP allowlisting</li>
+                <li><span class="check-icon">✓</span> HIPAA-ready offering available</li>
+                <li><span class="check-icon">✓</span> Claude Security (beta)</li>
+              </ul>
+            </div>
+
+            <!-- Carib Cold Sovereign Tier (Active) -->
+            <div class="plan-card sovereign-active-card">
+              <div class="active-sovereign-ribbon">ACTIVE PLAN · 100% FREE</div>
+              <span class="plan-user-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--claude-green);">Unlimited Seats</span>
+              <div class="plan-tier-name sovereign-name">Carib Cold Sovereign</div>
+              <div class="plan-price-block">
+                <span class="plan-price sovereign-price">$0.00</span>
+                <span class="plan-period">/ forever</span>
+              </div>
+              <span class="plan-sub-price" style="color: var(--claude-green); font-weight: 600;">$0.00 subscription · $0.00 token bill</span>
+              <p class="plan-desc">Sovereign multi-model intelligence with zero subscription, zero per-seat fees, and zero token bills.</p>
+              <button class="plan-action-btn sovereign-btn" onclick="window.closePlansModal()">
+                <span>✓ Current Sovereign Plan</span>
+              </button>
+              <ul class="plan-feature-list sovereign-features">
+                <li><span class="check-icon sovereign-check">✓</span> <strong>>2,800,000,000 Free Monthly Tokens</strong> ($0 bill)</li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>Frontier Multi-Model Engine</strong>: Gemini 2.5/3.8 Flash, DeepSeek R1 671B Free, Llama 3.3 70B, Qwen 2.5 72B, NVIDIA NIM</li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>Includes ALL Premium & Enterprise Features</strong>: Claude Code, Claude Cowork, Claude Design, Claude Science</li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>Remote & Local Connectors</strong>: jarvis-mac-bridge, carib-sovereign-bridge, filesystem, sqlite-memory, github, fetch</li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>Admin API, Workspaces, Members, Scoped Keys, WIF OIDC Pools</strong></li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>Local Ollama Hardware Auto-Detection</strong> (localhost:11434)</li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>1:1 macOS Desktop App UI Parity & Session Persistence</strong></li>
+                <li><span class="check-icon sovereign-check">✓</span> <strong>Zero Model Training & Absolute Sovereign Privacy</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="plans-footnote">
+            *[Usage limits apply.](https://support.anthropic.com/en/articles/9797557-usage-limit-best-practices) Prices and plans are subject to change at Anthropic’s discretion. Carib Cold Sovereign monthly token pool is guaranteed 100% free with $0.00 infrastructure cost.
+          </div>
+        </div>
+      </div>
+    </dialog>
+    <aside id="claudeArtifactDrawer" class="claude-artifact-drawer" aria-label="Artifact Preview and Code" hidden>
+      <div class="artifact-drawer-header">
+        <div class="artifact-drawer-title-group">
+          <span id="artifactDrawerBadge" class="artifact-type-tag">HTML</span>
+          <div class="artifact-drawer-headings">
+            <h3 id="artifactDrawerTitle" class="artifact-drawer-title">Carib Live Results Track Dashboard</h3>
+            <span id="artifactDrawerMeta" class="artifact-drawer-meta">Carib_Live_Results_Web · 420 lines</span>
+          </div>
+        </div>
+
+        <div class="artifact-drawer-tabs">
+          <button id="artifactTabPreview" class="artifact-drawer-tab active" type="button" onclick="window.switchArtifactDrawerTab('preview')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            Preview
+          </button>
+          <button id="artifactTabCode" class="artifact-drawer-tab" type="button" onclick="window.switchArtifactDrawerTab('code')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Code
+          </button>
+        </div>
+
+        <div class="artifact-drawer-actions">
+          <button id="artifactCopyBtn" class="artifact-icon-btn" type="button" title="Copy code" onclick="window.copyArtifactDrawerCode()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <span id="artifactCopyLabel">Copy</span>
+          </button>
+          <button id="artifactPopoutBtn" class="artifact-icon-btn" type="button" title="Open in new window" onclick="window.popoutArtifactDrawer()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+          <button id="artifactCloseBtn" class="artifact-icon-btn close-btn" type="button" title="Close artifact" onclick="window.closeArtifactDrawer()">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div class="artifact-drawer-body">
+        <div id="artifactPreviewContainer" class="artifact-preview-pane">
+          <iframe id="artifactIframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Artifact Live Sandbox"></iframe>
+        </div>
+        <div id="artifactCodeContainer" class="artifact-code-pane" hidden>
+          <div class="code-toolbar">
+            <span id="artifactCodeLanguage" class="code-lang-tag">HTML</span>
+            <span id="artifactCodeLines" class="code-lines-count">420 lines</span>
+          </div>
+          <pre id="artifactCodePre" class="artifact-code-pre"><code id="artifactCodeText"></code></pre>
+        </div>
+      </div>
+    </aside>
+    <div id="artifactDrawerBackdrop" class="artifact-drawer-backdrop" onclick="window.closeArtifactDrawer()" hidden></div>
+
+    <!-- Client-side Scripts -->
+    <script>window.CARIB_VERSION = "__FCC_VERSION__";</script>
+    <script src="/admin/assets/__FCC_VERSION__/session_ui.js"></script>
+    <script src="/admin/assets/__FCC_VERSION__/code_sessions.js"></script>
+    <script src="/admin/assets/__FCC_VERSION__/claude_suite.js"></script>
+  </body>
+</html>
