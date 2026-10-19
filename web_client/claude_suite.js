@@ -248,6 +248,18 @@ window.ClaudeSuite = (function () {
     }
   };
 
+  window.startSkillPrompt = function(promptText) {
+    if (window.navigateToView) window.navigateToView('new');
+    setTimeout(() => {
+      const textarea = document.getElementById('chatPromptInput') || document.querySelector('.claude-prompt-textarea');
+      if (textarea) {
+        textarea.value = promptText;
+        textarea.focus();
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, 150);
+  };
+
   window.focusSearch = function() {
     const term = prompt("Search chats & projects:", "");
     if (term) {
@@ -282,18 +294,39 @@ window.ClaudeSuite = (function () {
 
       renderUserProfileCard();
 
-    // Initial Route Detection (supports both clean path /code and hash /#code / #code)
+    // Initial Route Detection with Deep-link Support (e.g., #customize/connectors, #customize/plugins, expanded=true)
     const validViews = ['new', 'projects', 'artifacts', 'customize', 'code', 'settings'];
-    const rawHash = (window.location.hash || '').replace(/^#\/?/, '').split('/')[0];
-    const rawPath = (window.location.pathname || '').replace(/^\//, '').split('/')[0];
-    const initialView = validViews.includes(rawHash) ? rawHash : (validViews.includes(rawPath) ? rawPath : 'new');
+    function resolveRoute(hashOrPath) {
+      const full = (hashOrPath || '').replace(/^#\/?/, '').replace(/^\//, '');
+      const parts = full.split(/[/?]/);
+      const baseView = parts[0] || 'new';
+
+      if (baseView === 'customize') {
+        if (!window.customizeExpanded) window.customizeExpanded = {};
+        if (full.includes('connectors')) window.activeCustomizeTab = 'connectors';
+        else if (full.includes('plugins')) window.activeCustomizeTab = 'plugins';
+        else if (full.includes('skills')) window.activeCustomizeTab = 'skills';
+
+        if (full.includes('yours')) window.activeCustomizeSubTab = 'yours';
+        else if (full.includes('discover')) window.activeCustomizeSubTab = 'discover';
+
+        if (full.includes('expanded') || full.includes('show_all')) {
+          window.customizeExpanded['new-skills'] = true;
+          window.customizeExpanded['most-installed-skills'] = true;
+          window.customizeExpanded['top-connectors'] = true;
+          window.customizeExpanded['new-plugins'] = true;
+          window.customizeExpanded['most-installed-plugins'] = true;
+        }
+      }
+      return validViews.includes(baseView) ? baseView : 'new';
+    }
+
+    const initialView = resolveRoute(window.location.hash || window.location.pathname);
     if (window.navigateToView) window.navigateToView(initialView);
 
     window.addEventListener("hashchange", () => {
-      const currentHash = (window.location.hash || '').replace(/^#\/?/, '').split('/')[0];
-      if (currentHash && validViews.includes(currentHash)) {
-        if (window.navigateToView) window.navigateToView(currentHash);
-      }
+      const currentView = resolveRoute(window.location.hash);
+      if (window.navigateToView) window.navigateToView(currentView);
     });
 
       window.initCaribTheme();
@@ -2203,19 +2236,182 @@ Your responsibilities:
 
     if (!window.activeCustomizeTab) window.activeCustomizeTab = 'skills';
     if (!window.activeCustomizeSubTab) window.activeCustomizeSubTab = 'discover';
+    if (!window.customizeExpanded) window.customizeExpanded = {};
+    if (!window.installedCustomizations) {
+      try {
+        window.installedCustomizations = JSON.parse(localStorage.getItem('carib_installed_customizations') || '["Bigdata.com", "Google Drive", "Google Calendar", "learn"]');
+      } catch (e) {
+        window.installedCustomizations = ["Bigdata.com", "Google Drive", "Google Calendar", "learn"];
+      }
+    }
 
+    const verifiedSvg = `<svg class="card-verified-badge" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="16 9 10 15 8 13"></polyline></svg>`;
+
+    const ICONS = {
+      jinko: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="4.5" height="9" rx="1.5" fill="#10b981"/><rect x="9.75" y="4" width="4.5" height="16" rx="1.5" fill="#f59e0b"/><rect x="16.5" y="8" width="4.5" height="12" rx="1.5" fill="#3b82f6"/></svg>`,
+      code: `<span style="font-family:ui-monospace,Menlo,Monaco,monospace;font-size:13px;font-weight:700;color:#6b7280;letter-spacing:-0.5px;">&lt;/&gt;</span>`,
+      doc: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+      docPencil: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
+      artifacts: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>`,
+      chartUp: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
+      globe: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
+      bank: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="20" x2="22" y2="20"></line><line x1="4" y1="10" x2="4" y2="20"></line><line x1="12" y1="10" x2="12" y2="20"></line><line x1="20" y1="10" x2="20" y2="20"></line><polygon points="12 2 2 9 22 9 12 2"></polygon></svg>`,
+      zap: `<svg width="18" height="18" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" stroke-width="1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
+      gdrive: `<svg width="20" height="20" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44c-.8 1.4-1.2 2.95-1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>`,
+      gmail: `<svg width="20" height="16" viewBox="0 0 24 19" fill="none"><path d="M22 2.5V16.5C22 17.6 21.1 18.5 20 18.5H4C2.9 18.5 2 17.6 2 16.5V2.5L12 9.5L22 2.5Z" fill="#EA4335"/><path d="M2 2.5C2 1.4 2.9 0.5 4 0.5H20C21.1 0.5 22 1.4 22 2.5V3L12 10L2 3V2.5Z" fill="#C5221F"/></svg>`,
+      gcal: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="3" fill="#ffffff" stroke="#4285F4" stroke-width="2"/><path d="M3 8h18" stroke="#4285F4" stroke-width="2"/><text x="12" y="17" font-size="9" font-weight="700" text-anchor="middle" fill="#1f1e1d" font-family="sans-serif">31</text></svg>`,
+      canva: `<div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg, #00c4cc, #7d2ae8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;font-family:sans-serif;">C</div>`,
+      ms365: `<svg width="20" height="20" viewBox="0 0 24 24"><rect x="2" y="2" width="9.5" height="9.5" fill="#f25022"/><rect x="12.5" y="2" width="9.5" height="9.5" fill="#7fba00"/><rect x="2" y="12.5" width="9.5" height="9.5" fill="#00a4ef"/><rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#ffb900"/></svg>`,
+      notion: `<div style="width:20px;height:20px;border-radius:4px;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;font-family:sans-serif;">N</div>`,
+      github: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#24292f"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>`,
+      slack: `<svg width="20" height="20" viewBox="0 0 24 24"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z" fill="#E01E5A"/><path d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" fill="#2EB67D"/></svg>`
+    };
+
+    // --- DATA CATALOGS MATCHING PHOTOS 1, 2, 3 ---
+    const skillsData = {
+      newSkills: [
+        { id: 'jinko', name: 'Jinkō', icon: ICONS.jinko, desc: 'Skills for quantitative systems pharmacology using Jinkō platform. Support the full...', author: 'Anthropic Directory' },
+        { id: 'iceberg', name: 'iceberg', icon: ICONS.code, desc: 'Apply Hemingway writing rules to technical documentation — inline, intentional, clean...', author: 'Anthropic Directory' },
+        { id: 'elmah', name: 'elmah.io', icon: ICONS.code, desc: 'Error monitoring and log management for your production apps. Query logs, find exceptions...', author: 'Anthropic Directory' },
+        { id: 'learn', name: 'learn', icon: ICONS.doc, desc: 'Use this skill when the user wants intellectual understanding — learning how systems work...', author: 'by Anthropic' },
+        { id: 'doc-coauthoring', name: 'doc-coauthoring', icon: ICONS.docPencil, desc: 'Guide users through a structured workflow for co-authoring documentation, specifications, and PRDs...', author: 'by Anthropic' },
+        { id: 'web-artifacts-builder', name: 'web-artifacts-builder', icon: ICONS.artifacts, desc: 'Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts with modern CSS...', author: 'by Anthropic' },
+        // Expanded items for "Show all →"
+        { id: 'built-in-browser', name: 'built-in-browser', icon: ICONS.globe, desc: 'Interact with and automate browser pages via local headless engine.', author: 'Anthropic Directory' },
+        { id: 'computer-use', name: 'computer-use', icon: '🖥️', desc: 'Control mouse, keyboard, and inspect screen directly on macOS.', author: 'Anthropic Directory' },
+        { id: 'deep-research', name: 'deep-research', icon: '🔬', desc: 'Conduct multi-hop autonomous web research across primary sources.', author: 'Anthropic Directory' },
+        { id: 'setup-audit', name: 'setup-audit', icon: '🛡️', desc: 'Verify local workspace dependencies, runtime tools, and security policies.', author: 'Anthropic Directory' },
+        { id: 'shepherd', name: 'shepherd', icon: '🐑', desc: 'Supervise autonomous multi-agent task teams with continuous error recovery.', author: 'by Anthropic' },
+        { id: 'xlsx', name: 'xlsx', icon: ICONS.jinko, desc: 'Read and write Excel spreadsheets (.xlsx) with formulas and charts.', author: 'Anthropic Directory' }
+      ],
+      mostInstalledSkills: [
+        { id: 'bigdata', name: 'Bigdata.com', icon: ICONS.chartUp, desc: 'Official Bigdata.com plugin providing financial research, analytics, and intelligent...', author: 'Anthropic Directory · 195.7K Installs' },
+        { id: 'nimble', name: 'Nimble', icon: ICONS.globe, desc: 'Nimble web data toolkit — search, extract, map, crawl the web and work...', author: 'Anthropic Directory · 178.7K Installs' },
+        { id: 'daloopa', name: 'Daloopa', icon: ICONS.bank, desc: 'Financial analysis skills powered by Daloopa\'s institutional-grade data...', author: 'Anthropic Directory · 170.3K Installs' },
+        { id: 'zapier', name: 'Zapier', icon: ICONS.zap, desc: 'Connect 8,000+ apps to your AI workflow. Discover, enable, and execute Zapier actio...', author: 'Anthropic Directory · 158.5K Installs' },
+        // Expanded items for "Show all →"
+        { id: 'github-skill', name: 'GitHub', icon: ICONS.github, desc: 'Inspect repositories, open pull requests, and manage issues directly.', author: 'Anthropic Directory · 142.1K Installs' },
+        { id: 'linear-skill', name: 'Linear', icon: '📐', desc: 'Create, triage, and track engineering tasks with Linear workspaces.', author: 'Anthropic Directory · 128.4K Installs' },
+        { id: 'slack-skill', name: 'Slack', icon: ICONS.slack, desc: 'Search channels, send team updates, and monitor discussions.', author: 'Anthropic Directory · 119.8K Installs' },
+        { id: 'figma-skill', name: 'Figma', icon: '🎨', desc: 'Inspect designs, export component CSS tokens, and sync UI specs.', author: 'Anthropic Directory · 104.2K Installs' }
+      ]
+    };
+
+    const connectorsData = {
+      topConnectors: [
+        { id: 'gdrive', name: 'Google Drive', verified: true, icon: ICONS.gdrive, desc: 'Search, read, and upload files instantly', author: 'by Google' },
+        { id: 'gmail', name: 'Gmail', verified: true, icon: ICONS.gmail, desc: 'Draft replies, summarize threads, & search your inbox', author: 'by Google' },
+        { id: 'gcal', name: 'Google Calendar', verified: true, icon: ICONS.gcal, desc: 'Manage your schedule and coordinate meetings effortlessly', author: 'by Google' },
+        { id: 'canva', name: 'Canva', verified: true, icon: ICONS.canva, desc: 'Search, create, autofill, and export Canva designs', author: 'by Canva' },
+        { id: 'ms365', name: 'Microsoft 365', verified: true, icon: ICONS.ms365, desc: 'Access your company\'s SharePoint, OneDrive, Outlook, and Teams directly in Claude', author: 'by Anthropic' },
+        { id: 'notion', name: 'Notion', verified: true, icon: ICONS.notion, desc: 'Connect your Notion workspace to search, update, and power workflows across tools', author: 'by Notion' },
+        // Expanded items for "Show all →"
+        { id: 'github-conn', name: 'GitHub Enterprise', verified: true, icon: ICONS.github, desc: 'Search enterprise repos, manage pull requests, and audit CI/CD workflows', author: 'by GitHub' },
+        { id: 'slack-conn', name: 'Slack Workplace', verified: true, icon: ICONS.slack, desc: 'Send channel broadcasts, read active threads, and monitor alerts', author: 'by Slack' },
+        { id: 'linear-conn', name: 'Linear Cycles', verified: true, icon: '📐', desc: 'Sync sprint roadmaps, triage blockers, and update issue states', author: 'by Linear' },
+        { id: 'figma-conn', name: 'Figma Design System', verified: true, icon: '🎨', desc: 'Inspect design components, pull layout tokens, and inspect vector assets', author: 'by Figma' },
+        { id: 'dropbox-conn', name: 'Dropbox Cloud', verified: true, icon: '📦', desc: 'Access shared company folders, sync documents, and archive media', author: 'by Dropbox' },
+        { id: 'salesforce-conn', name: 'Salesforce CRM', verified: true, icon: '☁', desc: 'Query CRM accounts, pipeline stages, and customer activity logs', author: 'by Salesforce' }
+      ]
+    };
+
+    const pluginsData = {
+      newPlugins: [
+        { id: 'jinko-plug', name: 'Jinkō', icon: ICONS.jinko, desc: 'Skills for quantitative systems pharmacology using Jinkō platform. Support the full...', author: 'Anthropic Directory' },
+        { id: 'iceberg-plug', name: 'iceberg', icon: ICONS.code, desc: 'Apply Hemingway writing rules to technical documentation — inline, intentional, clean...', author: 'Anthropic Directory' },
+        { id: 'elmah-plug', name: 'elmah.io', icon: ICONS.code, desc: 'Error monitoring and log management for your production apps. Query logs,...', author: 'Anthropic Directory' },
+        { id: 'learn-plug', name: 'learn', icon: ICONS.doc, desc: 'Use this skill when the user wants intellectual understanding — learning how...', author: 'by Anthropic' },
+        { id: 'doc-coauthoring-plug', name: 'doc-coauthoring', icon: ICONS.docPencil, desc: 'Guide users through a structured workflow for co-authoring documentation. Use whe...', author: 'by Anthropic' },
+        { id: 'web-artifacts-builder-plug', name: 'web-artifacts-builder', icon: ICONS.artifacts, desc: 'Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using...', author: 'by Anthropic' },
+        // Expanded items
+        { id: 'reverse-eng-plug', name: 'reverse-engineering', icon: '🔬', desc: 'Mach-O disassembler, Info.plist parser, Web bundle analyzer, and symbol extractor.', author: 'Carib Sovereign' },
+        { id: 'agent-teams-plug', name: 'agent-teams', icon: '👥', desc: 'Multi-agent coordination, parallel debugging, and team communication protocols.', author: 'Carib Sovereign' },
+        { id: 'flutter-plug', name: 'flutter', icon: '📱', desc: 'Flutter/Dart CLI, widget inspector, hot reload, and responsive UI components.', author: 'Carib Sovereign' },
+        { id: 'modern-web-plug', name: 'modern-web-guidance', icon: ICONS.globe, desc: 'Modern web standards, responsive design systems, and CSS token architecture.', author: 'Carib Sovereign' }
+      ],
+      mostInstalledPlugins: [
+        { id: 'bigdata-plug', name: 'Bigdata.com', icon: ICONS.chartUp, desc: 'Official Bigdata.com plugin providing financial research, analytics, and intelligen...', author: 'Anthropic Directory · 195.7K Installs' },
+        { id: 'nimble-plug', name: 'Nimble', icon: ICONS.globe, desc: 'Nimble web data toolkit — search, extract, map, crawl the web and work with...', author: 'Anthropic Directory · 178.7K Installs' },
+        { id: 'daloopa-plug', name: 'Daloopa', icon: ICONS.bank, desc: 'Financial analysis skills powered by Daloopa\'s institutional-grade data...', author: 'Anthropic Directory · 170.3K Installs' },
+        { id: 'zapier-plug', name: 'Zapier', icon: ICONS.zap, desc: 'Connect 8,000+ apps to your AI workflow. Discover, enable, and execute Zapier actio...', author: 'Anthropic Directory · 158.5K Installs' },
+        // Expanded items
+        { id: 'github-plug', name: 'GitHub Actions Pro', icon: ICONS.github, desc: 'Deploy automated test suites and inspect workflow runs on commit push.', author: 'Anthropic Directory · 135.2K Installs' },
+        { id: 'linear-plug', name: 'Linear Sync', icon: '📐', desc: 'Real-time project issue synchronization with sovereign mesh webhooks.', author: 'Anthropic Directory · 114.8K Installs' }
+      ]
+    };
+
+    function renderCard(item, isConnector = false) {
+      const isAdded = window.installedCustomizations.includes(item.name);
+      return `
+        <div class="customize-horizontal-card" data-card-id="${item.id}" data-card-name="${item.name}">
+          <div class="card-icon-box" style="color:${item.iconColor || 'inherit'};">
+            ${item.icon}
+          </div>
+          <div class="card-main-content">
+            <div class="card-header-row">
+              <div class="card-title-group">
+                <span class="card-title-text">${item.name}</span>
+                ${item.verified ? verifiedSvg : ''}
+              </div>
+              <div class="card-actions-group">
+                ${!isConnector ? `
+                  <button class="card-btn-try" onclick="window.startSkillPrompt('Activate and try ${item.name} skill');">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Try</span>
+                  </button>
+                ` : ''}
+                <button class="card-btn-add ${isAdded ? 'added' : ''}" data-item-name="${item.name}" title="${isAdded ? 'Installed' : 'Install'}">
+                  ${isAdded ? '✓' : '+'}
+                </button>
+              </div>
+            </div>
+            <p class="card-desc-text">${item.desc}</p>
+            <div class="card-subtext">${item.author}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Top Navigation HTML
     container.innerHTML = `
       <div class="customize-view-container">
-        <!-- Top Navigation Bar (Photo 2) -->
+        <!-- Top Navigation Bar (Exact Parity with Photos 1, 2, 3) -->
         <div class="customize-top-nav">
-          <div class="customize-trinity-tabs">
-            <button class="trinity-tab ${window.activeCustomizeTab === 'skills' ? 'active' : ''}" data-ctab="skills">Skills</button>
-            <button class="trinity-tab ${window.activeCustomizeTab === 'connectors' ? 'active' : ''}" data-ctab="connectors">Connectors</button>
-            <button class="trinity-tab ${window.activeCustomizeTab === 'plugins' ? 'active' : ''}" data-ctab="plugins">Plugins</button>
+          <div class="customize-nav-left">
+            <div class="customize-trinity-tabs">
+              <button class="trinity-tab ${window.activeCustomizeTab === 'skills' ? 'active' : ''}" data-ctab="skills">Skills</button>
+              <button class="trinity-tab ${window.activeCustomizeTab === 'connectors' ? 'active' : ''}" data-ctab="connectors">Connectors</button>
+              <button class="trinity-tab ${window.activeCustomizeTab === 'plugins' ? 'active' : ''}" data-ctab="plugins">Plugins</button>
+            </div>
+            <div class="customize-sub-tabs">
+              <button class="customize-sub-tab ${window.activeCustomizeSubTab === 'yours' ? 'active' : ''}" data-sub="yours">Yours</button>
+              <button class="customize-sub-tab ${window.activeCustomizeSubTab === 'discover' ? 'active' : ''}" data-sub="discover">Discover</button>
+            </div>
           </div>
-          <div class="customize-sub-tabs">
-            <button class="customize-sub-tab ${window.activeCustomizeSubTab === 'yours' ? 'active' : ''}" data-sub="yours">Yours</button>
-            <button class="customize-sub-tab ${window.activeCustomizeSubTab === 'discover' ? 'active' : ''}" data-sub="discover">Discover</button>
+          <div class="customize-nav-right">
+            <div class="customize-search-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="customizeSearchInput" placeholder="Search" value="${window.customizeSearchQuery || ''}">
+            </div>
+            <button class="customize-icon-btn" id="customizeFilterBtn" title="Filter Directory">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+            </button>
+            <button class="customize-icon-btn" id="customizeSortBtn" title="Sort Directory">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M7 15l5 5 5-5"></path><path d="M7 9l5-5 5-5"></path><line x1="12" y1="4" x2="12" y2="20"></line>
+              </svg>
+            </button>
+            <div class="customize-add-dropdown-wrap">
+              <button class="customize-btn-add" id="customizeAddBtn">
+                <span>+ Add</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -2223,6 +2419,7 @@ Your responsibilities:
       </div>
     `;
 
+    // Tab switcher events
     container.querySelectorAll("[data-ctab]").forEach(btn => {
       btn.addEventListener("click", () => {
         window.activeCustomizeTab = btn.dataset.ctab;
@@ -2237,223 +2434,311 @@ Your responsibilities:
       });
     });
 
+    // Search input event
+    const searchInput = container.querySelector("#customizeSearchInput");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        window.customizeSearchQuery = e.target.value.toLowerCase().trim();
+        filterCards(window.customizeSearchQuery);
+      });
+    }
+
+    function filterCards(query) {
+      container.querySelectorAll(".customize-horizontal-card").forEach(card => {
+        const name = (card.dataset.cardName || '').toLowerCase();
+        const text = card.innerText.toLowerCase();
+        if (!query || name.includes(query) || text.includes(query)) {
+          card.style.display = "flex";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    }
+
+    // Add button handler
+    const addBtn = container.querySelector("#customizeAddBtn");
+    if (addBtn) {
+      addBtn.addEventListener("click", () => {
+        const title = prompt("Enter custom Skill, MCP Connector or Plugin name to install:");
+        if (title && title.trim()) {
+          const item = title.trim();
+          if (!window.installedCustomizations.includes(item)) {
+            window.installedCustomizations.push(item);
+            localStorage.setItem('carib_installed_customizations', JSON.stringify(window.installedCustomizations));
+            renderCustomizeView(container);
+          }
+        }
+      });
+    }
+
     const body = container.querySelector("#customizeBody");
     if (!body) return;
 
+    // --- TAB: SKILLS (PHOTO 1) ---
     if (window.activeCustomizeTab === "skills") {
-      body.innerHTML = `
-        <!-- Green Hero Banner (Photo 2) -->
-        <div class="customize-green-banner">
-          <div class="green-banner-content">
-            <div class="green-banner-tag">From Anthropic: Data</div>
-            <h2 class="green-banner-title">Query, chart and explain your data — SQL, spreadsheets and dashboards in one place.</h2>
-          </div>
-          <button class="green-banner-btn" onclick="window.navigateToView('new');">Try</button>
-        </div>
+      if (window.activeCustomizeSubTab === "discover") {
+        const isNewExp = !!window.customizeExpanded['new-skills'];
+        const isMostExp = !!window.customizeExpanded['most-installed-skills'];
+        const newItems = isNewExp ? skillsData.newSkills : skillsData.newSkills.slice(0, 6);
+        const mostItems = isMostExp ? skillsData.mostInstalledSkills : skillsData.mostInstalledSkills.slice(0, 4);
 
-        <!-- New Skills Section (Photo 2) -->
-        <div class="customize-section">
-          <div class="customize-section-header">
-            <h3 class="customize-section-title">New skills</h3>
-          </div>
-          <div class="new-skills-grid">
-            <div class="skill-card-official">
-              <div class="skill-card-top">
-                <div class="skill-icon-box" style="background:#2b201a;color:#d97746;">⚙️</div>
-                <div class="skill-author-tag">Anthropic</div>
-              </div>
-              <h4 class="skill-name">Setup Audit</h4>
-              <p class="skill-desc">Verify local workspace dependencies, runtime tools, and security policies.</p>
-              <div class="skill-card-footer">
-                <button class="skill-try-btn" onclick="window.startSkillPrompt('Run Setup Audit');">💬 Try</button>
-                <button class="skill-add-btn" title="Add skill">+</button>
-              </div>
+        body.innerHTML = `
+          <!-- New Skills Section (Photo 1) -->
+          <div class="customize-section">
+            <div class="customize-section-header">
+              <h3 class="customize-section-title">New skills</h3>
+              <button class="customize-show-all-btn" data-sec-key="new-skills">
+                ${isNewExp ? 'Show less ↑' : 'Show all →'}
+              </button>
             </div>
+            <div class="customize-cards-grid">
+              ${newItems.map(item => renderCard(item, false)).join('')}
+            </div>
+          </div>
 
-            <div class="skill-card-official">
-              <div class="skill-card-top">
-                <div class="skill-icon-box" style="background:#1b2520;color:#10b981;">🛡️</div>
-                <div class="skill-author-tag">Carib Sovereign</div>
-              </div>
-              <h4 class="skill-name">Shepherd</h4>
-              <p class="skill-desc">Supervise autonomous multi-agent task teams with continuous error recovery.</p>
-              <div class="skill-card-footer">
-                <button class="skill-try-btn" onclick="window.startSkillPrompt('Activate Shepherd agent');">💬 Try</button>
-                <button class="skill-add-btn" title="Add skill">+</button>
+          <!-- Most Installed Skills Section (Photo 1) -->
+          <div class="customize-section" style="margin-top:28px;">
+            <div class="customize-section-header">
+              <h3 class="customize-section-title">Most installed skills</h3>
+              <button class="customize-show-all-btn" data-sec-key="most-installed-skills">
+                ${isMostExp ? 'Show less ↑' : 'Show all →'}
+              </button>
+            </div>
+            <div class="customize-cards-grid">
+              ${mostItems.map(item => renderCard(item, false)).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        // Yours scope for Skills
+        const userSkills = skillsData.newSkills.concat(skillsData.mostInstalledSkills).filter(s => window.installedCustomizations.includes(s.name));
+        body.innerHTML = `
+          <div class="customize-section">
+            <div class="customize-section-header">
+              <div class="customize-title-with-badge">
+                <h3 class="customize-section-title">Your active skills</h3>
+                <span class="customize-count-badge">${userSkills.length}</span>
               </div>
             </div>
+            <div class="customize-cards-grid">
+              ${userSkills.length > 0 ? userSkills.map(item => renderCard(item, false)).join('') : '<p style="color:#888580;font-size:13px;grid-column:1/-1;">No skills installed yet. Click "Discover" to add skills.</p>'}
+            </div>
+          </div>
+        `;
+      }
+    }
+    // --- TAB: CONNECTORS (PHOTO 2) ---
+    else if (window.activeCustomizeTab === "connectors") {
+      if (window.activeCustomizeSubTab === "discover") {
+        const isConnExp = !!window.customizeExpanded['top-connectors'];
+        const connItems = isConnExp ? connectorsData.topConnectors : connectorsData.topConnectors.slice(0, 6);
 
-            <div class="skill-card-official">
-              <div class="skill-card-top">
-                <div class="skill-icon-box" style="background:#201c2a;color:#a855f7;">⚡</div>
-                <div class="skill-author-tag">Carib Sovereign</div>
-              </div>
-              <h4 class="skill-name">Jinkō</h4>
-              <p class="skill-desc">Reverse engineer binaries, reconstruct application graphs and map native APIs.</p>
-              <div class="skill-card-footer">
-                <button class="skill-try-btn" onclick="window.startSkillPrompt('Run Jinkō reverse engineering inspection');">💬 Try</button>
-                <button class="skill-add-btn" title="Add skill">+</button>
-              </div>
-            </div>
+        const carouselSlides = [
+          {
+            tag: 'CURATED BY ANTHROPIC',
+            title: 'Claude for science',
+            desc: 'Search literature, plan experiments, and analyze results.',
+            icons: [
+              { label: 'M', bg: '#e8f0fe', color: '#1a73e8', bold: true },
+              { label: 'bR', bg: '#fce8e6', color: '#d93025', bold: true },
+              { label: 'NIH', bg: '#133c55', color: '#ffffff', bold: true, fontSize: '11px' },
+              { label: '🔬', bg: '#e6f4ea', color: '#137333' },
+              { label: '🧬', bg: '#fef7e0', color: '#b06000' },
+              { label: 'W', bg: '#f1f3f4', color: '#202124', bold: true },
+              { label: '🧊', bg: '#202124', color: '#ffffff', fontSize: '12px' }
+            ],
+            action: 'Explore science connectors'
+          },
+          {
+            tag: 'CURATED BY ANTHROPIC',
+            title: 'Claude for developers',
+            desc: 'Connect repositories, automate test suites, and orchestrate CI/CD pipelines.',
+            icons: [
+              { label: '🐙', bg: '#24292e', color: '#ffffff' },
+              { label: '📐', bg: '#5e6ad2', color: '#ffffff' },
+              { label: '💬', bg: '#4a154b', color: '#ffffff' },
+              { label: '⚡', bg: '#f97316', color: '#ffffff' },
+              { label: '💻', bg: '#10b981', color: '#ffffff' },
+              { label: '📦', bg: '#0284c7', color: '#ffffff' },
+              { label: '⚙️', bg: '#64748b', color: '#ffffff' }
+            ],
+            action: 'Explore developer connectors'
+          },
+          {
+            tag: 'CURATED BY ANTHROPIC',
+            title: 'Claude for productivity',
+            desc: 'Sync your workspace across Google Drive, Microsoft 365, Notion, and Slack.',
+            icons: [
+              { label: '▲', bg: '#4285f4', color: '#ffffff' },
+              { label: '✉', bg: '#ea4335', color: '#ffffff' },
+              { label: '31', bg: '#34a853', color: '#ffffff', bold: true },
+              { label: '田', bg: '#0078d4', color: '#ffffff' },
+              { label: 'N', bg: '#000000', color: '#ffffff', bold: true },
+              { label: 'C', bg: '#00c4cc', color: '#ffffff', bold: true },
+              { label: '☁', bg: '#00a1e0', color: '#ffffff' }
+            ],
+            action: 'Explore productivity connectors'
+          }
+        ];
 
-            <div class="skill-card-official">
-              <div class="skill-card-top">
-                <div class="skill-icon-box" style="background:#1c252a;color:#0ea5e9;">🧠</div>
-                <div class="skill-author-tag">Anthropic</div>
-              </div>
-              <h4 class="skill-name">learn</h4>
-              <p class="skill-desc">Extract reusable architectural patterns from sessions and preserve in local knowledge.</p>
-              <div class="skill-card-footer">
-                <button class="skill-try-btn" onclick="window.startSkillPrompt('Execute learn instinct evaluation');">💬 Try</button>
-                <button class="skill-add-btn" title="Add skill">+</button>
-              </div>
-            </div>
+        const curSlideIdx = (window.carouselCurrentIndex || 0) % carouselSlides.length;
+        const activeSlide = carouselSlides[curSlideIdx];
 
-            <div class="skill-card-official">
-              <div class="skill-card-top">
-                <div class="skill-icon-box" style="background:#28231a;color:#f59e0b;">📝</div>
-                <div class="skill-author-tag">Anthropic</div>
+        body.innerHTML = `
+          <!-- Curated Carousel Hero Banner (Photo 2) -->
+          <div class="customize-carousel-banner">
+            <button class="carousel-arrow left" id="carouselPrevBtn" title="Previous Curated Collection">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <div class="carousel-slide-content">
+              <div class="carousel-curated-tag">${activeSlide.tag}</div>
+              <h2 class="carousel-slide-title">${activeSlide.title}</h2>
+              <p class="carousel-slide-desc">${activeSlide.desc}</p>
+              <div class="carousel-icons-row">
+                ${activeSlide.icons.map(ic => `
+                  <span class="carousel-partner-icon" style="background:${ic.bg};color:${ic.color};${ic.bold ? 'font-weight:700;' : ''}${ic.fontSize ? 'font-size:' + ic.fontSize + ';' : ''}">
+                    ${ic.label}
+                  </span>
+                `).join('')}
               </div>
-              <h4 class="skill-name">doc-coauthoring</h4>
-              <p class="skill-desc">Collaboratively author technical specifications, architecture decisions, and PRDs.</p>
-              <div class="skill-card-footer">
-                <button class="skill-try-btn" onclick="window.startSkillPrompt('Draft coauthored document');">💬 Try</button>
-                <button class="skill-add-btn" title="Add skill">+</button>
-              </div>
+              <button class="carousel-explore-btn" onclick="window.startSkillPrompt('${activeSlide.action}');">Explore</button>
             </div>
+            <button class="carousel-arrow right" id="carouselNextBtn" title="Next Curated Collection">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <div class="carousel-pagination-dots">
+              ${carouselSlides.map((_, i) => `<span class="carousel-dot ${i === curSlideIdx ? 'active' : ''}"></span>`).join('')}
+            </div>
+          </div>
 
-            <div class="skill-card-official">
-              <div class="skill-card-top">
-                <div class="skill-icon-box" style="background:#241c22;color:#ec4899;">🎨</div>
-                <div class="skill-author-tag">Anthropic</div>
+          <!-- Top Connectors Section (Photo 2) -->
+          <div class="customize-section">
+            <div class="customize-section-header">
+              <div class="customize-title-with-badge">
+                <h3 class="customize-section-title">Top connectors</h3>
+                <span class="customize-count-badge">6481</span>
               </div>
-              <h4 class="skill-name">web-artifacts-builder</h4>
-              <p class="skill-desc">Construct interactive React components, visual graphs, and live sandboxes.</p>
-              <div class="skill-card-footer">
-                <button class="skill-try-btn" onclick="window.startSkillPrompt('Create an interactive web artifact');">💬 Try</button>
-                <button class="skill-add-btn" title="Add skill">+</button>
-              </div>
+              <button class="customize-show-all-btn" data-sec-key="top-connectors">
+                ${isConnExp ? 'Show less ↑' : 'Show all →'}
+              </button>
+            </div>
+            <div class="customize-cards-grid">
+              ${connItems.map(item => renderCard(item, true)).join('')}
             </div>
           </div>
-        </div>
+        `;
+      } else {
+        // Yours scope for Connectors
+        const userConns = connectorsData.topConnectors.filter(c => window.installedCustomizations.includes(c.name));
+        body.innerHTML = `
+          <div class="customize-section">
+            <div class="customize-section-header">
+              <div class="customize-title-with-badge">
+                <h3 class="customize-section-title">Your active connectors</h3>
+                <span class="customize-count-badge">${userConns.length}</span>
+              </div>
+            </div>
+            <div class="customize-cards-grid">
+              ${userConns.length > 0 ? userConns.map(item => renderCard(item, true)).join('') : '<p style="color:#888580;font-size:13px;grid-column:1/-1;">No connectors connected yet. Click "Discover" to connect apps.</p>'}
+            </div>
+          </div>
+        `;
+      }
+    }
+    // --- TAB: PLUGINS (PHOTO 3) ---
+    else {
+      if (window.activeCustomizeSubTab === "discover") {
+        const isNewPlugExp = !!window.customizeExpanded['new-plugins'];
+        const isMostPlugExp = !!window.customizeExpanded['most-installed-plugins'];
+        const newPlugItems = isNewPlugExp ? pluginsData.newPlugins : pluginsData.newPlugins.slice(0, 6);
+        const mostPlugItems = isMostPlugExp ? pluginsData.mostInstalledPlugins : pluginsData.mostInstalledPlugins.slice(0, 4);
 
-        <!-- Most Installed Skills (18 REA Extracted Anthropic Skills) -->
-        <div class="customize-section" style="margin-top:28px;">
-          <div class="customize-section-header">
-            <h3 class="customize-section-title">Most installed skills</h3>
-          </div>
-          <div class="installed-skills-list">
-            ${[
-              { id: 'built-in-browser', name: 'built-in-browser', desc: 'Interact with and automate browser pages via local headless engine.' },
-              { id: 'chrome-browser', name: 'chrome-browser', desc: 'Connect to external Chrome browser instance for inspection and testing.' },
-              { id: 'computer-use', name: 'computer-use', desc: 'Control mouse, keyboard, and inspect screen directly on macOS.' },
-              { id: 'consolidate-memory', name: 'consolidate-memory', desc: 'Deduplicate, refine, and index conversational memory for long-term recall.' },
-              { id: 'deep-research', name: 'deep-research', desc: 'Conduct multi-hop autonomous web research across primary sources.' },
-              { id: 'docs', name: 'docs', desc: 'Generate, parse, and format comprehensive document structures.' },
-              { id: 'docx', name: 'docx', desc: 'Read and write Microsoft Word (.docx) documents with styling.' },
-              { id: 'explain-usage', name: 'explain-usage', desc: 'Inspect token efficiency, model usage, and sovereign budget limits.' },
-              { id: 'google-workspace', name: 'google-workspace', desc: 'Connect to Google Drive, Docs, Sheets, and Gmail via OAuth.' },
-              { id: 'import-memory', name: 'import-memory', desc: 'Ingest memory traces, past conversations, and scratchpads.' },
-              { id: 'morning', name: 'morning', desc: 'Execute daily morning standup routine and calendar briefing.' },
-              { id: 'pdf', name: 'pdf', desc: 'Extract text, tables, and render vector PDF pages with high fidelity.' },
-              { id: 'pptx', name: 'pptx', desc: 'Generate and edit Microsoft PowerPoint (.pptx) presentation decks.' },
-              { id: 'schedule', name: 'schedule', desc: 'Schedule recurring background cron routines and one-shot timers.' },
-              { id: 'setup-claude', name: 'setup-claude', desc: 'Configure Claude Desktop hooks, permissions, and tool schemas.' },
-              { id: 'setup-cowork', name: 'setup-cowork', desc: 'Configure Cowork collaborative directory and team shares.' },
-              { id: 'skill-creator', name: 'skill-creator', desc: 'Distill new workflows and instructions into standardized skills.' },
-              { id: 'xlsx', name: 'xlsx', desc: 'Read and write Excel spreadsheets (.xlsx) with formulas and charts.' }
-            ].map(s => `
-              <div class="installed-skill-row">
-                <div class="installed-skill-info">
-                  <div class="installed-skill-title">${s.name}</div>
-                  <div class="installed-skill-desc">${s.desc}</div>
-                </div>
-                <div class="installed-skill-actions">
-                  <span class="skill-status-pill active">Installed</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    } else if (window.activeCustomizeTab === "connectors") {
-      body.innerHTML = `
-        <div class="customize-section">
-          <div class="customize-section-header">
-            <h3 class="customize-section-title">Model Context Protocol (MCP) Connectors</h3>
-            <p style="color:#888580;font-size:12.5px;margin-top:4px;">Connected tools and sovereign API bridges running locally on your Mac.</p>
-          </div>
-          <div class="connectors-list-grid">
-            <div class="connector-card active">
-              <div class="connector-card-header">
-                <span class="mcp-dot active"></span>
-                <span class="connector-name">carib-sovereign-bridge</span>
-                <span class="connector-badge">Stdio</span>
-              </div>
-              <p class="connector-desc">Sovereign model router (DeepSeek R1, Llama 3.3, Gemini 2.5 Flash) executing at $0.00 cost.</p>
+        body.innerHTML = `
+          <!-- New Plugins Section (Photo 3) -->
+          <div class="customize-section">
+            <div class="customize-section-header">
+              <h3 class="customize-section-title">New plugins</h3>
+              <button class="customize-show-all-btn" data-sec-key="new-plugins">
+                ${isNewPlugExp ? 'Show less ↑' : 'Show all →'}
+              </button>
             </div>
-            <div class="connector-card active">
-              <div class="connector-card-header">
-                <span class="mcp-dot active"></span>
-                <span class="connector-name">jarvis-mac-bridge</span>
-                <span class="connector-badge">macOS</span>
-              </div>
-              <p class="connector-desc">Screen inspection, window listing, terminal dialog clearing, and zero-token benchmark.</p>
-            </div>
-            <div class="connector-card active">
-              <div class="connector-card-header">
-                <span class="mcp-dot active"></span>
-                <span class="connector-name">rea (Reverse Engineer Anything)</span>
-                <span class="connector-badge">Binary</span>
-              </div>
-              <p class="connector-desc">Mach-O disassembler, Info.plist parser, Web bundle analyzer, and symbol extractor.</p>
-            </div>
-            <div class="connector-card active">
-              <div class="connector-card-header">
-                <span class="mcp-dot active"></span>
-                <span class="connector-name">dart-mcp-server</span>
-                <span class="connector-badge">Flutter</span>
-              </div>
-              <p class="connector-desc">Dart analyzer, Flutter driver, hot reload, widget inspector, and pub tools.</p>
-            </div>
-            <div class="connector-card active">
-              <div class="connector-card-header">
-                <span class="mcp-dot active"></span>
-                <span class="connector-name">data-agent-kit</span>
-                <span class="connector-badge">Cloud</span>
-              </div>
-              <p class="connector-desc">BigQuery, Cloud Storage, and Google Cloud telemetry inspection tools.</p>
+            <div class="customize-cards-grid">
+              ${newPlugItems.map(item => renderCard(item, false)).join('')}
             </div>
           </div>
-        </div>
-      `;
-    } else {
-      body.innerHTML = `
-        <div class="customize-section">
-          <div class="customize-section-header">
-            <h3 class="customize-section-title">Installed Plugins Directory</h3>
-            <p style="color:#888580;font-size:12.5px;margin-top:4px;">Workspace and global plugins currently active in Carib Claude.</p>
-          </div>
-          <div class="installed-plugins-grid">
-            <div class="plugin-card">
-              <div class="plugin-name">reverse-engineering</div>
-              <div class="plugin-desc">Binary analysis, protocol reverse engineering, and memory forensics suite.</div>
+
+          <!-- Most Installed Plugins Section (Photo 3) -->
+          <div class="customize-section" style="margin-top:28px;">
+            <div class="customize-section-header">
+              <h3 class="customize-section-title">Most installed plugins</h3>
+              <button class="customize-show-all-btn" data-sec-key="most-installed-plugins">
+                ${isMostPlugExp ? 'Show less ↑' : 'Show all →'}
+              </button>
             </div>
-            <div class="plugin-card">
-              <div class="plugin-name">agent-teams</div>
-              <div class="plugin-desc">Multi-agent coordination, parallel debugging, and team communication protocols.</div>
-            </div>
-            <div class="plugin-card">
-              <div class="plugin-name">flutter</div>
-              <div class="plugin-desc">Flutter/Dart CLI, testing, and responsive UI components.</div>
-            </div>
-            <div class="plugin-card">
-              <div class="plugin-name">modern-web-guidance</div>
-              <div class="plugin-desc">Modern web standards, responsive design, and CSS token systems.</div>
+            <div class="customize-cards-grid">
+              ${mostPlugItems.map(item => renderCard(item, false)).join('')}
             </div>
           </div>
-        </div>
-      `;
+        `;
+      } else {
+        // Yours scope for Plugins
+        const userPlugins = pluginsData.newPlugins.concat(pluginsData.mostInstalledPlugins).filter(p => window.installedCustomizations.includes(p.name));
+        body.innerHTML = `
+          <div class="customize-section">
+            <div class="customize-section-header">
+              <div class="customize-title-with-badge">
+                <h3 class="customize-section-title">Your active plugins</h3>
+                <span class="customize-count-badge">${userPlugins.length}</span>
+              </div>
+            </div>
+            <div class="customize-cards-grid">
+              ${userPlugins.length > 0 ? userPlugins.map(item => renderCard(item, false)).join('') : '<p style="color:#888580;font-size:13px;grid-column:1/-1;">No plugins active yet. Click "Discover" to add plugins.</p>'}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Attach "Show all →" Click Listeners (Circled in green by user!)
+    body.querySelectorAll(".customize-show-all-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.secKey;
+        if (key) {
+          window.customizeExpanded[key] = !window.customizeExpanded[key];
+          renderCustomizeView(container);
+        }
+      });
+    });
+
+    // Attach Add (+) Click Listeners
+    body.querySelectorAll(".card-btn-add").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const itemName = btn.dataset.itemName;
+        if (!itemName) return;
+        const idx = window.installedCustomizations.indexOf(itemName);
+        if (idx > -1) {
+          window.installedCustomizations.splice(idx, 1);
+        } else {
+          window.installedCustomizations.push(itemName);
+        }
+        localStorage.setItem('carib_installed_customizations', JSON.stringify(window.installedCustomizations));
+        renderCustomizeView(container);
+      });
+    });
+
+    // Carousel Prev/Next Buttons
+    const prevBtn = body.querySelector("#carouselPrevBtn");
+    const nextBtn = body.querySelector("#carouselNextBtn");
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener("click", () => {
+        window.carouselCurrentIndex = ((window.carouselCurrentIndex || 0) - 1 + 3) % 3;
+        renderCustomizeView(container);
+      });
+      nextBtn.addEventListener("click", () => {
+        window.carouselCurrentIndex = ((window.carouselCurrentIndex || 0) + 1) % 3;
+        renderCustomizeView(container);
+      });
     }
   }
 
@@ -2550,14 +2835,22 @@ Your responsibilities:
     if (!body) return;
 
     if (window.activeSettingsSection === "general") {
+      const isLight = document.body.classList.contains('light-mode');
       body.innerHTML = `
         <!-- Verification Banner (Photo 4) -->
         <div class="settings-verification-banner">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
           <div class="verification-banner-text">
-            Your email address <strong style="color:#ececec;">djozzyb@icloud.com</strong> is verified on Sovereign Mesh.
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+              <circle cx="12" cy="12" r="9" stroke="#d97706" stroke-width="2"></circle>
+              <circle cx="12" cy="12" r="4.5" fill="#d97706"></circle>
+            </svg>
+            <div style="font-size:13px;line-height:1.4;color:#d1cfc7;">
+              <span>Your email address</span>
+              <strong style="color:#ffffff;margin:0 4px;">djozzyb@icloud.com</strong>
+              <span>is verified on Sovereign Mesh.</span>
+            </div>
           </div>
-          <button class="verification-banner-btn" onclick="alert('Verification token confirmed active.');">Resend verification email</button>
+          <button class="verification-banner-btn" onclick="alert('Verification token verified active for djozzyb@icloud.com');">Resend verification email</button>
         </div>
 
         <!-- Appearance Section (Photo 4) -->
@@ -2568,10 +2861,16 @@ Your responsibilities:
             <div class="setting-ctrl-info">
               <div class="setting-ctrl-title">Theme</div>
             </div>
-            <div class="segmented-ctrl-group">
-              <button class="seg-btn" id="themeBtnSystem">🖥</button>
-              <button class="seg-btn" id="themeBtnLight">☀️</button>
-              <button class="seg-btn active" id="themeBtnDark">🌙</button>
+            <div class="segmented-ctrl-group" id="themeSegmentedGroup">
+              <button class="seg-btn" id="themeBtnSystem" title="System Theme">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              </button>
+              <button class="seg-btn ${isLight ? 'active' : ''}" id="themeBtnLight" title="Light Theme">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              </button>
+              <button class="seg-btn ${!isLight ? 'active' : ''}" id="themeBtnDark" title="Dark Theme">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              </button>
             </div>
           </div>
 
@@ -2592,9 +2891,9 @@ Your responsibilities:
               <div class="setting-ctrl-title">Transcript text size</div>
             </div>
             <div class="segmented-ctrl-group">
-              <button class="seg-btn">S</button>
-              <button class="seg-btn active">M</button>
-              <button class="seg-btn">L</button>
+              <button class="seg-btn" data-val="s">S</button>
+              <button class="seg-btn active" data-val="m">M</button>
+              <button class="seg-btn" data-val="l">L</button>
             </div>
           </div>
 
@@ -2603,8 +2902,8 @@ Your responsibilities:
               <div class="setting-ctrl-title">Transcript width</div>
             </div>
             <div class="segmented-ctrl-group">
-              <button class="seg-btn active">Normal</button>
-              <button class="seg-btn">Wide</button>
+              <button class="seg-btn active" data-val="normal">Normal</button>
+              <button class="seg-btn" data-val="wide">Wide</button>
             </div>
           </div>
 
@@ -2613,14 +2912,14 @@ Your responsibilities:
               <div class="setting-ctrl-title">Motion</div>
             </div>
             <div class="segmented-ctrl-group">
-              <button class="seg-btn active">Full</button>
-              <button class="seg-btn">Reduced</button>
+              <button class="seg-btn active" data-val="full">Full</button>
+              <button class="seg-btn" data-val="reduced">Reduced</button>
             </div>
           </div>
         </div>
 
         <!-- Voice Section (Photo 4) -->
-        <div class="settings-section-block" style="margin-top:24px;">
+        <div class="settings-section-block" style="margin-top:28px;">
           <h3 class="settings-block-title">Voice</h3>
 
           <div class="settings-control-row">
@@ -2631,6 +2930,8 @@ Your responsibilities:
               <option selected>Auto-detect (English)</option>
               <option>Spanish</option>
               <option>French</option>
+              <option>German</option>
+              <option>Japanese</option>
             </select>
           </div>
 
@@ -2642,10 +2943,32 @@ Your responsibilities:
               <option selected>Default</option>
               <option>Warm</option>
               <option>Concise</option>
+              <option>Expressive</option>
             </select>
           </div>
         </div>
       `;
+
+      // Wire interactive segmented controls
+      body.querySelectorAll('.segmented-ctrl-group').forEach(group => {
+        group.querySelectorAll('.seg-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            group.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (btn.id === 'themeBtnLight') {
+              document.body.classList.add('light-mode');
+              localStorage.setItem('claude_theme', 'light');
+            } else if (btn.id === 'themeBtnDark') {
+              document.body.classList.remove('light-mode');
+              localStorage.setItem('claude_theme', 'dark');
+            } else if (btn.id === 'themeBtnSystem') {
+              const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+              document.body.classList.toggle('light-mode', !prefersDark);
+              localStorage.removeItem('claude_theme');
+            }
+          });
+        });
+      });
 
       // Setup Font Selection
       const fontSelect = body.querySelector("#chatFontSelect");
@@ -2663,6 +2986,51 @@ Your responsibilities:
           }
         });
       }
+    } else if (window.activeSettingsSection === "account") {
+      body.innerHTML = `
+        <div class="settings-section-block">
+          <h3 class="settings-block-title">Account</h3>
+          <div class="settings-control-row">
+            <div class="setting-ctrl-info"><div class="setting-ctrl-title">Email</div><div class="setting-ctrl-caption">djozzyb@icloud.com</div></div>
+            <span class="mcp-status-pill mcp-active" style="background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3);padding:3px 10px;border-radius:20px;font-size:12px;">Verified</span>
+          </div>
+          <div class="settings-control-row">
+            <div class="setting-ctrl-info"><div class="setting-ctrl-title">Plan</div><div class="setting-ctrl-caption">Free plan · Sovereign Tier</div></div>
+            <button class="btn-claude-send" style="padding:6px 14px;border-radius:20px;font-size:12.5px;" onclick="window.openPlansModal()">Upgrade</button>
+          </div>
+          <div class="settings-control-row">
+            <div class="setting-ctrl-info"><div class="setting-ctrl-title">Session Security</div><div class="setting-ctrl-caption">Strict Write Discipline SHA-256 enabled</div></div>
+            <span style="font-size:12px;color:#888580;">Hardware Isolated</span>
+          </div>
+        </div>
+      `;
+    } else if (window.activeSettingsSection === "billing") {
+      body.innerHTML = `
+        <div class="settings-section-block">
+          <h3 class="settings-block-title">Billing & Quota</h3>
+          <div class="settings-control-row">
+            <div class="setting-ctrl-info"><div class="setting-ctrl-title">Monthly Subscription</div><div class="setting-ctrl-caption">$0.00 / month (Sovereign Free Pool)</div></div>
+            <span style="font-weight:600;color:#10b981;font-size:13px;">$0.00 Active</span>
+          </div>
+          <div class="settings-control-row">
+            <div class="setting-ctrl-info"><div class="setting-ctrl-title">Token Allocation</div><div class="setting-ctrl-caption">2.8B+ Monthly Tokens via awesome-free-models</div></div>
+            <span style="font-size:12px;color:#38bdf8;">Unlimited Sovereign Routing</span>
+          </div>
+        </div>
+      `;
+    } else if (window.activeSettingsSection === "claude-code") {
+      body.innerHTML = `
+        <div class="settings-section-block">
+          <h3 class="settings-block-title">Claude Code CLI & Terminal</h3>
+          <p style="color:#888580;font-size:13px;line-height:1.6;margin-bottom:18px;">
+            Native terminal and coding session integration for macOS.
+          </p>
+          <div class="settings-control-row">
+            <div class="setting-ctrl-info"><div class="setting-ctrl-title">Terminal Agent State</div><div class="setting-ctrl-caption">Active on port 8888 (/v1 gateway)</div></div>
+            <button class="btn-claude-send" style="padding:6px 14px;border-radius:6px;font-size:12px;" onclick="window.navigateToView('code')">Open Code Window</button>
+          </div>
+        </div>
+      `;
     } else {
       body.innerHTML = `
         <div class="settings-section-block">

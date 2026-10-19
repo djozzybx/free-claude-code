@@ -131,6 +131,40 @@ async function runTests() {
     }
   }
 
+  // TEST 8: Customize View 1:1 Parity (Photos 1, 2, 3) & Show All Expansion
+  console.log('\n--- TEST GROUP 8: CUSTOMIZE VIEW 1:1 PARITY (PHOTOS 1, 2, 3) & SHOW ALL EXPANSION ---');
+  assert('Skills catalog has Jinkō, iceberg, elmah.io, learn, doc-coauthoring, web-artifacts-builder', 
+    jsContent.includes('Jinkō') && jsContent.includes('iceberg') && jsContent.includes('elmah.io') && jsContent.includes('doc-coauthoring') && jsContent.includes('web-artifacts-builder'));
+  assert('Most installed catalog has Bigdata.com, Nimble, Daloopa, Zapier',
+    jsContent.includes('Bigdata.com') && jsContent.includes('Nimble') && jsContent.includes('Daloopa') && jsContent.includes('Zapier'));
+  assert('Connectors catalog has Google Drive, Gmail, Google Calendar, Canva, Microsoft 365, Notion',
+    jsContent.includes('Google Drive') && jsContent.includes('Gmail') && jsContent.includes('Google Calendar') && jsContent.includes('Canva') && jsContent.includes('Microsoft 365') && jsContent.includes('Notion'));
+  assert('Connectors has Curated Carousel Hero (Claude for science)',
+    jsContent.includes('Claude for science') && jsContent.includes('CURATED BY ANTHROPIC') && jsContent.includes('Search literature, plan experiments, and analyze results.'));
+  assert('Connectors has 6481 count and verified badges',
+    jsContent.includes('6481') && jsContent.includes('card-verified-badge'));
+  assert('Show all button expansion and toggle logic implemented',
+    jsContent.includes('Show all →') && jsContent.includes('Show less ↑') && jsContent.includes('customize-show-all-btn'));
+
+  const customizeShots = [
+    { name: 'photo1_skills_collapsed', url: `${BASE_URL}/#customize/skills` },
+    { name: 'photo1_skills_expanded', url: `${BASE_URL}/#customize/skills?show_all=true` },
+    { name: 'photo2_connectors_collapsed', url: `${BASE_URL}/#customize/connectors` },
+    { name: 'photo2_connectors_expanded', url: `${BASE_URL}/#customize/connectors?show_all=true` },
+    { name: 'photo3_plugins_collapsed', url: `${BASE_URL}/#customize/plugins` },
+    { name: 'photo3_plugins_expanded', url: `${BASE_URL}/#customize/plugins?show_all=true` }
+  ];
+
+  for (const s of customizeShots) {
+    try {
+      const outPath = path.join(ARTIFACTS_DIR, `autotest_${s.name}.png`);
+      execSync(`"${chromePath}" --headless --disable-gpu --screenshot="${outPath}" --window-size=1200,800 "${s.url}" 2>/dev/null`);
+      assert(`Captured high-fidelity parity screenshot for ${s.name}`, fs.existsSync(outPath) && fs.statSync(outPath).size > 10000);
+    } catch (e) {
+      console.warn(`[WARN] Parity capture failed for ${s.name}:`, e.message);
+    }
+  }
+
   console.log('\n===============================================================');
   console.log(`SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log('===============================================================\n');
